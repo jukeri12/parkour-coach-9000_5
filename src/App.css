@@ -13,19 +13,47 @@
   }
 }
 
+.ohjaus {
+  display: flex;
+  padding: 0;
+  flex-direction: column;
+}
+
+.ohjaus > p {
+  font-size: 24px;
+}
+
 .App-header {
-  background-color: #282c34;
+  background-color: black;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
+  font-size: 3.2em;
   color: white;
+  margin: 0px;
+}
+
+.peliohjaimet {
+  font-size: 0.8em;
 }
 
 .App-link {
-  color: #61dafb;
+  color: #0dd8b0;
+}
+
+.bigbutton {
+  font-size: 32px;
+}
+
+.lista {
+  font-size: 0.8em;
+}
+
+.rs-play {
+  max-width: 22% !important;
+  background-color: #0dd8b0 !important;
 }
 
 @keyframes App-logo-spin {

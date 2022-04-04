@@ -11,11 +11,15 @@ class Ohjaus extends React.Component {
       moveStrings: "",
       counter: 0,
       said: false,
-      gamemode: false
+      gamemode: false,
+      score: 0,
+      highScore: 0,
+      gameEnded: false,
+      gameSetDuration: 0,
     }
   }
 
-  generate(gamemode) {
+  generate(gamemode, duration, addScore, restart) {
     // Generate a set of movements for a run or as solo moves
     let pool = ["Step Vault", "Monkey Vault", "Side Vault", "Lazy", "Dash"];
     let maxRepeats = 5;
@@ -24,6 +28,9 @@ class Ohjaus extends React.Component {
     // I think there is a simpler JS-way to do this but w/e
     let numMoves = Math.floor(Math.random() * maxMoves);
     const moveArray = [];
+    if (numMoves < 1) {
+      numMoves = 1;
+    }
 
     for (let i = 0; i < numMoves; i++) {
       let moveSelector = Math.floor(Math.random() * pool.length);
@@ -39,15 +46,26 @@ class Ohjaus extends React.Component {
     let moveStrings = moveArray.map(move => <li>{move}</li>)
 
     if (gamemode) {
-        this.setState({counter: 30})
-        this.setState({interval: setInterval(() => {
-          this.setState({counter: this.state.counter - 1})
-          if (this.state.counter < 0) {
-            clearInterval(this.state.interval)
-            this.generate(true)
+      // If adding score during generation, don't generate new counter
+      if (!addScore) {
+
+          this.setState({counter: duration})
+          this.setState({gameSetDuration: duration})
+          this.setState({interval: setInterval(() => {
+            this.setState({counter: this.state.counter - 1})
+              if (this.state.counter < 0) {
+                clearInterval(this.state.interval)
+                this.endGame();
+                }
+              }, 1000)
+            });
+          if (restart) {
+            this.setState({score: 0})
+            this.setState({gameEnded: false})
           }
-        }, 1000)
-      });
+        } else {
+          this.setState({score: this.state.score + 1})
+        }
     }
 
     this.setState({moves: moveStrings});
@@ -60,13 +78,22 @@ class Ohjaus extends React.Component {
 
   componentDidUpdate() {
     // super.componentDidMount();
-    console.log("Done");
     let btn = document.getElementsByClassName("rs-play");
 
     if (btn.length > 0 && this.state.said !== true) {
-      console.log(btn[0]);
       btn[0].click();
       this.setState({said: true})
+    }
+  }
+
+  endGame() {
+    this.setState({gameEnded: true})
+    this.setHighScore();
+  }
+
+  setHighScore() {
+    if (this.state.score > this.state.highScore) {
+      this.setState({highScore: this.state.score})
     }
   }
 
@@ -74,21 +101,41 @@ class Ohjaus extends React.Component {
     if (this.state.started === true) {
 
       return (
-        <div className="Ohjaus">
+        <div className="ohjaus">
             <p>
               <b>Tee seuraavat liikkeet:</b>
             </p>
-            <ul>
-              <Speech text={this.state.moveStrings} rate={0.75} onClick={() => this.generate()}/>
+
+            <ul class="lista">
               {this.state.moves}
             </ul>
             <p>
+              <Speech text={this.state.moveStrings} rate={0.75} onClick={() => this.generate()}/>
+            </p>
+            <p>
             {this.state.gamemode === true &&
-              <p>Aikaa {this.state.counter}s TAI</p>
+              <div class="peliohjaimet">
+                <p>Pisteet {this.state.score} (session kovin: {this.state.highScore})</p>
+                <p>Aikaa {this.state.counter}s</p>
+                {this.state.gameEnded === false &&
+                  <button class="bigbutton" onClick={() => this.generate(true, 0, true)}>Lunasta</button>
+                }
+              </div>
             }
             </p>
             <p>
-            <button onClick={() => this.generate()}>Generoi uudet</button>
+            {this.state.gameEnded === true &&
+              <button class="bigbutton" onClick={() => this.generate(true, this.state.gameSetDuration, false, true)}>Uudestaan</button>
+            }
+
+            </p>
+            <p>
+            {!this.state.gamemode === true &&
+              <button class="bigbutton" onClick={() => this.generate()}>Generoi uudet</button>
+            }
+            </p>
+            <p>
+              <button class="bigbutton" onClick={() => window.location.reload()}>Valikkoon</button>
             </p>
         </div>
 
@@ -104,8 +151,18 @@ class Ohjaus extends React.Component {
         <button onClick={() => {
           // Generate a new "game"
           this.setState({started: true});
-          this.generate(true);}
-        }>Pelitila</button>
+          this.generate(true, 60);}
+        }>Pelitila 1min</button>
+        <button onClick={() => {
+          // Generate a new "game"
+          this.setState({started: true});
+          this.generate(true, 180);}
+        }>Pelitila 3min</button>
+        <button onClick={() => {
+          // Generate a new "game"
+          this.setState({started: true});
+          this.generate(true, 180);}
+        }>Pelitila 7min</button>
       </div>
     )
   }
